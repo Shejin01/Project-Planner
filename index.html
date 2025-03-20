@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link rel="stylesheet" href="style.css">
+	<title>Project Planner</title>
+</head>
+<body class="grid">
+	<canvas id="canvas" width="100" height="100"></canvas>
+
+	<div id="graph">
+		<!-- <div class="node" style="left: 200px; top: 100px">
+			<img src="close.svg" onclick="RemoveNode(this)">
+			<p>Project 1</p>
+		</div>
+		<div class="node" style="left: 500px; top: 100px">
+			<img src="close.svg" onclick="RemoveNode(this)">
+			<p>Project 2</p>
+		</div>
+		<div class="node" style="left: 500px; top: 400px">
+			<img src="close.svg" onclick="RemoveNode(this)">
+			<p>Project 3</p>
+		</div>
+		<div class="node" style="left: 200px; top: 400px">
+			<img src="close.svg" onclick="RemoveNode(this)">
+			<p>Project 4</p>
+		</div>
+		<div class="node" style="left: 350px; top: 250px">
+			<img src="close.svg" onclick="RemoveNode(this)">
+			<p>Project 5</p>
+		</div> -->
+	</div>
+
+
+	<div id="menu">
+		<p id="title">Project Planner</p>
+		<input type="text" id="name-input" placeholder="Name">
+		<button onclick="CreateNode()">Create Node</button>
+		<br>
+		<input type="checkbox" checked="true" id="toggle-grid" onclick="ToggleGrid()" name="toggle-grid">
+		<label for="toggle-grid">Toggle Grid</label>
+		<br>
+		<input type="checkbox" id="link-mode" name="link-mode">
+		<label for="link-mode">Link Mode</label>
+		<br>
+		<button onclick="ResetCamera()">Reset Camera</button>
+		<p id="credit"> 
+			Made by <a href="https://github.com/Shejin01">Shejin</a>
+		</p>
+	</div>
+
+	<script lang="javascript" src="script.js"></script>
+</body>
+</html>
