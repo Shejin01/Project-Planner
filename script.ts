@@ -18,11 +18,13 @@ interface GraphNode {
     description?: string,
     id?: number
 }
-let lastId = 0;
 const nodeDivs = document.getElementsByClassName('node') as HTMLCollectionOf<HTMLDivElement>;
-const nodes : GraphNode[] = [];
-let trackedId : number | undefined = undefined;
-//let prevTrackedId : number | undefined = undefined;
+//const nodes : GraphNode[] = [];
+const nodes = new Map<number, GraphNode>();
+const edges = [
+    [0, 1], [1, 2], [2, 3], [3, 4], [4, 0], [2, 4]
+];
+let lastId = 0;
 
 const camera: Vec2 = { x: 0, y: 0 };
 function UpdateCamera() {
@@ -38,17 +40,15 @@ function CreateNode() {
         position: { x: 0, y: 0 },
         id: lastId++
     };
-    //trackedNode = Create(node);
     Create(node);
-    trackedId = node.id;
     drag = true;
+    trackedId = node.id;
 }
 
 
 function Create(node: GraphNode): HTMLDivElement | null {
-    //console.log(node.title);
     if (node.title === '') return null;
-    nodes.push(node);
+    nodes.set(node.id as number, node);
     let nodeDiv = document.createElement("div");
     nodeDiv.classList.add('node');
     nodeDiv.style.left = `${node.position.x}px`;
@@ -65,11 +65,19 @@ function Create(node: GraphNode): HTMLDivElement | null {
 function RemoveNode(button: HTMLImageElement) {
     const nodeDiv = button.parentNode as HTMLDivElement;
     const nodeId : number = +(nodeDiv.dataset.id as string);
-    if (trackedId === nodeId) trackedId = undefined;
-    nodes[nodeId] = nodes[nodes.length-1];
-    nodes.pop();
-    nodeDivs[nodeId] = nodeDivs[nodeDivs.length-1];
-    nodeDivs.item(nodeDivs.length-1)?.remove();
+    nodes.delete(nodeId);
+    for (const element of nodeDivs) {
+        if (element.dataset.id === nodeId.toString()) {
+            element.remove();
+            break;
+        }
+    }
+    for (const edge of edges) {
+        if (edge[0] === nodeId || edge[1] === nodeId) {
+            edges.splice(edges.indexOf(edge));
+        }
+    }
+    DrawGraph();
 }
 
 function ResetCamera() {
@@ -95,19 +103,20 @@ function DrawGraph() {
     ctx.fillStyle = "rgba(0, 0, 0, 0)";
     ctx.fillRect(0, 0, canvasWidth, canvasHeight);
 
-    const edges = [
-        [0, 1], [1, 2], [2, 3], [3, 4], [4, 0], [2, 4]
-    ];
-
     ctx.strokeStyle = "gray";
     ctx.lineWidth = 2;
 
     for (const edge of edges) {
-        const x1 = nodes[edge[0]].position.x + camera.x + nodeSize.x / 2;
-        const y1 = nodes[edge[0]].position.y + camera.y + nodeSize.y / 2;
+        const node1 = nodes.get(edge[0]);
+        const node2 = nodes.get(edge[1]);
+
+        if (!node1 || !node2) continue;
+
+        const x1 = node1.position.x + camera.x + nodeSize.x / 2;
+        const y1 = node1.position.y + camera.y + nodeSize.y / 2;
         
-		const x2 = nodes[edge[1]].position.x + camera.x + nodeSize.x / 2;
-        const y2 = nodes[edge[1]].position.y + camera.y + nodeSize.y / 2;
+		const x2 = node2.position.x + camera.x + nodeSize.x / 2;
+        const y2 = node2.position.y + camera.y + nodeSize.y / 2;
 
 		ctx.moveTo(x1, y1);
         ctx.lineTo(x2, y2);
@@ -120,6 +129,7 @@ function DrawGraph() {
 window.onload = DrawGraph;
 window.onresize = DrawGraph;
 
+let trackedId : number | undefined = undefined;
 let prevMousePos: Vec2 = { x: 0, y: 0 };
 document.onmousedown = e => {
     drag = true;
@@ -132,7 +142,8 @@ document.onmousedown = e => {
     // if (prevTrackedId !== undefined) {
     //     nodeDivs[prevTrackedId].style.zIndex = "0";
     // }
-    for (const node of nodes) {
+    for (const pair of nodes) {
+        const node = pair[1];
         const nodePos: Vec2 = { x: node.position.x + camera.x, y: node.position.y + camera.y };
 
         if (mousePos.x < nodePos.x || mousePos.x > nodePos.x + nodeSize.x ||
@@ -146,14 +157,10 @@ document.onmousedown = e => {
             trackedId = node.id;
         }
     }
-    if (trackedId !== undefined) {
-        nodeDivs[trackedId].style.zIndex = "1";
-    }
 };
 
 document.onmouseup = () => {
     drag = false;
-    //prevTrackedId = trackedId;
     trackedId = undefined;
 };
 
@@ -174,13 +181,16 @@ document.onmousemove = e => {
         return;
     }
     
+    const node = nodes.get(trackedId);
+    if (!node) return;
+
 	let x = mousePos.x - nodeSize.x / 2;
     let y = mousePos.y - nodeSize.y / 2;
     
 	x = Math.min(Math.max(x, 0), document.documentElement.clientWidth - nodeSize.x) - camera.x;
     y = Math.min(Math.max(y, 0), document.documentElement.clientHeight - nodeSize.y) - camera.y;
 
-    nodes[trackedId].position = { x, y };
+    node.position = { x, y };
 
 	const keyframes = {
         left: `${x}px`,
@@ -191,7 +201,14 @@ document.onmousemove = e => {
         fill: "forwards"
     };
     //trackedNode.animate(keyframes, options);
-    nodeDivs[trackedId].animate(keyframes, options);
+    // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+        for (const nodeDiv of nodeDivs as any) {
+        const nodeId = +(nodeDiv.dataset.id as string);
+        if (nodeId === trackedId) {
+            nodeDiv.animate(keyframes, options);
+            break;
+        }
+    }
 
 	setTimeout(DrawGraph, 100);
 };
