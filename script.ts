@@ -20,8 +20,8 @@ interface GraphNode {
     id?: number
 }
 const nodeDivs = document.getElementsByClassName('node') as HTMLCollectionOf<HTMLDivElement>;
-const nodes = new Map<number, GraphNode>();
-const edges = [
+let nodes = new Map<number, GraphNode>();
+let edges = [
     [0, 1], [1, 2], [2, 3], [3, 4], [4, 0], [2, 4]
 ];
 let linkSelectID1 : number | undefined = undefined;
@@ -48,9 +48,13 @@ function CreateNode() {
 }
 
 
-function Create(node: GraphNode): HTMLDivElement | null {
+function Create(node: GraphNode) {
     if (node.title === '') return null;
     nodes.set(node.id as number, node);
+    DrawNode(node);
+}
+
+function DrawNode(node: GraphNode) {
     let nodeDiv = document.createElement("div");
     nodeDiv.classList.add('node');
     nodeDiv.style.left = `${node.position.x}px`;
@@ -61,7 +65,6 @@ function Create(node: GraphNode): HTMLDivElement | null {
 		<p>${node.title}</p>
 	`;
     graphDiv.append(nodeDiv);
-    return nodeDiv;
 }
 
 function RemoveNode(button: HTMLImageElement) {
@@ -74,7 +77,8 @@ function RemoveNode(button: HTMLImageElement) {
             break;
         }
     }
-    for (const edge of edges) {
+    for (let i = edges.length-1; i >= 0; i--) {
+        const edge = edges[i];
         if (edge[0] === nodeId || edge[1] === nodeId) {
             edges.splice(edges.indexOf(edge), 1);
         }
@@ -126,9 +130,77 @@ function DrawGraph() {
     }
 }
 
+// ------------------------ Save & Load ------------------------
+
+function replacer(key: any, value: any) {
+    if(value instanceof Map) {
+        return {
+            dataType: 'Map',
+            value: [...value], // or with spread: value: [...value]
+        };
+    } else {
+        return value;
+    }
+}
+function reviver(key: any, value: any) {
+    if(typeof value === 'object' && value !== null) {
+        if (value.dataType === 'Map') {
+            return new Map(value.value);
+        }
+    }
+    return value;
+}
+
+function Save() {
+    const newNodes = new Map<number, GraphNode>();
+
+    //const arr = [1, 2, 4, 5, 8, 7, 9];
+    //const newArr = [];
+
+    let index = 0;
+
+    for (const element of nodes) {
+        if (element[1].id !== index) {
+            for (const edge of edges) {
+                if (edge[0] === element[1].id) edge[0] = index;
+                if (edge[1] === element[1].id) edge[1] = index;
+            }
+        }
+        index++;
+    }
+    index = 0;
+    for (const element of nodes) {
+        if (element[1].id === index) {
+            newNodes.set(element[1].id, element[1]);
+        }
+        else {
+            element[1].id = index;
+            newNodes.set(index, element[1]);
+        }
+        index++;
+    }
+
+    localStorage.setItem("nodes", JSON.stringify(newNodes, replacer));
+    localStorage.setItem("edges", JSON.stringify(edges, replacer));
+    localStorage.setItem("lastId", lastId.toString());
+}
+
+function Load() {
+    nodes = JSON.parse(localStorage.getItem("nodes") as string, reviver);
+    edges = JSON.parse(localStorage.getItem("edges") as string, reviver);
+    lastId = +(localStorage.getItem("lastId") as string);
+    graphDiv.innerHTML = '';
+    for (const pair of nodes) {
+        const node = pair[1];
+        DrawNode(node);
+    }
+    DrawGraph();
+}
+
 // ------------------------ Event Handlers ------------------------
 
-window.onload = DrawGraph;
+window.onload = Load;
+window.onbeforeunload = Save;
 window.onresize = DrawGraph;
 
 let trackedId : number | undefined = undefined;
@@ -235,8 +307,12 @@ document.onmousemove = e => {
 	setTimeout(DrawGraph, 100);
 };
 
-Create({ title: "Project 1", position: { x: 200, y: 100}, id: lastId++ });
-Create({ title: "Project 2", position: { x: 500, y: 100}, id: lastId++ });
-Create({ title: "Project 3", position: { x: 500, y: 400}, id: lastId++ });
-Create({ title: "Project 4", position: { x: 200, y: 400}, id: lastId++ });
-Create({ title: "Project 5", position: { x: 350, y: 250}, id: lastId++ });
+function DebugCreate() {
+    Create({ title: "Project 1", position: { x: 200, y: 100}, id: lastId++ });
+    Create({ title: "Project 2", position: { x: 500, y: 100}, id: lastId++ });
+    Create({ title: "Project 3", position: { x: 500, y: 400}, id: lastId++ });
+    Create({ title: "Project 4", position: { x: 200, y: 400}, id: lastId++ });
+    Create({ title: "Project 5", position: { x: 350, y: 250}, id: lastId++ });
+    edges = [[0, 1], [1, 2], [2, 3], [3, 4], [4, 0], [2, 4]];
+    DrawGraph();
+}
