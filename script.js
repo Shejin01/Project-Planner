@@ -35,6 +35,8 @@ function CreateNode() {
 function Create(node) {
     if (node.title === '')
         return null;
+    if (nodes == null)
+        nodes = new Map();
     nodes.set(node.id, node);
     DrawNode(node);
 }
@@ -80,6 +82,8 @@ function ToggleGrid() {
     document.body.classList.toggle("grid");
 }
 function DrawGraph() {
+    if (edges == null)
+        return;
     const canvasWidth = document.documentElement.clientWidth;
     const canvasHeight = document.documentElement.clientHeight;
     canvas.width = canvasWidth;
@@ -124,8 +128,6 @@ function reviver(key, value) {
 }
 function Save() {
     const newNodes = new Map();
-    //const arr = [1, 2, 4, 5, 8, 7, 9];
-    //const newArr = [];
     let index = 0;
     for (const element of nodes) {
         if (element[1].id !== index) {
@@ -175,6 +177,8 @@ document.onmousedown = e => {
     const mousePos = { x: e.clientX, y: e.clientY };
     prevMousePos = mousePos;
     let closestDistance = Number.POSITIVE_INFINITY;
+    if (nodes == null)
+        return;
     for (const pair of nodes) {
         const node = pair[1];
         const nodePos = { x: node.position.x + camera.x, y: node.position.y + camera.y };
@@ -193,6 +197,8 @@ document.onmousedown = e => {
         }
         else if (linkSelectID2 === undefined && linkSelectID1 !== trackedId) {
             linkSelectID2 = trackedId;
+            if (edges == null)
+                edges = new Array();
             let newEdge = [linkSelectID1, linkSelectID2];
             const edgeExistsIndex = edges.findIndex(edge => Compare(edge, newEdge));
             if (edgeExistsIndex !== -1) {
