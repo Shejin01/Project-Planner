@@ -3,14 +3,16 @@ const nameInput = document.getElementById('name-input');
 const graphDiv = document.getElementById('graph');
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
+const linkModeButton = document.getElementById('link-mode');
 let drag = false;
 ;
 const nodeDivs = document.getElementsByClassName('node');
-//const nodes : GraphNode[] = [];
 const nodes = new Map();
 const edges = [
     [0, 1], [1, 2], [2, 3], [3, 4], [4, 0], [2, 4]
 ];
+let linkSelectID1 = undefined;
+let linkSelectID2 = undefined;
 let lastId = 0;
 const camera = { x: 0, y: 0 };
 function UpdateCamera() {
@@ -59,7 +61,7 @@ function RemoveNode(button) {
     }
     for (const edge of edges) {
         if (edge[0] === nodeId || edge[1] === nodeId) {
-            edges.splice(edges.indexOf(edge));
+            edges.splice(edges.indexOf(edge), 1);
         }
     }
     DrawGraph();
@@ -107,9 +109,6 @@ document.onmousedown = e => {
     const mousePos = { x: e.clientX, y: e.clientY };
     prevMousePos = mousePos;
     let closestDistance = Number.POSITIVE_INFINITY;
-    // if (prevTrackedId !== undefined) {
-    //     nodeDivs[prevTrackedId].style.zIndex = "0";
-    // }
     for (const pair of nodes) {
         const node = pair[1];
         const nodePos = { x: node.position.x + camera.x, y: node.position.y + camera.y };
@@ -122,7 +121,28 @@ document.onmousedown = e => {
             trackedId = node.id;
         }
     }
+    if (linkModeButton.checked && trackedId !== undefined) {
+        if (linkSelectID1 === undefined) {
+            linkSelectID1 = trackedId;
+        }
+        else if (linkSelectID2 === undefined && linkSelectID1 !== trackedId) {
+            linkSelectID2 = trackedId;
+            let newEdge = [linkSelectID1, linkSelectID2];
+            const edgeExistsIndex = edges.findIndex(edge => Compare(edge, newEdge));
+            if (edgeExistsIndex !== -1) {
+                edges.splice(edgeExistsIndex, 1);
+            }
+            else
+                edges.push([linkSelectID1, linkSelectID2]);
+            linkSelectID1 = undefined;
+            linkSelectID2 = undefined;
+            DrawGraph();
+        }
+    }
 };
+function Compare(a, b) {
+    return (a[0] === b[0] && a[1] === b[1]) || (a[0] === b[1] && a[1] === b[0]);
+}
 document.onmouseup = () => {
     drag = false;
     trackedId = undefined;
@@ -156,7 +176,6 @@ document.onmousemove = e => {
         duration: 100,
         fill: "forwards"
     };
-    //trackedNode.animate(keyframes, options);
     // biome-ignore lint/suspicious/noExplicitAny: <explanation>
     for (const nodeDiv of nodeDivs) {
         const nodeId = +nodeDiv.dataset.id;

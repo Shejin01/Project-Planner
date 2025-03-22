@@ -2,6 +2,7 @@ const nameInput = document.getElementById('name-input') as HTMLInputElement ;
 const graphDiv = document.getElementById('graph') as HTMLDivElement;
 const canvas = document.getElementById("canvas") as HTMLCanvasElement;
 const ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
+const linkModeButton = document.getElementById('link-mode') as HTMLInputElement;
 
 let drag = false;
 
@@ -19,11 +20,12 @@ interface GraphNode {
     id?: number
 }
 const nodeDivs = document.getElementsByClassName('node') as HTMLCollectionOf<HTMLDivElement>;
-//const nodes : GraphNode[] = [];
 const nodes = new Map<number, GraphNode>();
 const edges = [
     [0, 1], [1, 2], [2, 3], [3, 4], [4, 0], [2, 4]
 ];
+let linkSelectID1 : number | undefined = undefined;
+let linkSelectID2 : number | undefined = undefined;
 let lastId = 0;
 
 const camera: Vec2 = { x: 0, y: 0 };
@@ -74,7 +76,7 @@ function RemoveNode(button: HTMLImageElement) {
     }
     for (const edge of edges) {
         if (edge[0] === nodeId || edge[1] === nodeId) {
-            edges.splice(edges.indexOf(edge));
+            edges.splice(edges.indexOf(edge), 1);
         }
     }
     DrawGraph();
@@ -139,9 +141,6 @@ document.onmousedown = e => {
 
     let closestDistance = Number.POSITIVE_INFINITY;
 
-    // if (prevTrackedId !== undefined) {
-    //     nodeDivs[prevTrackedId].style.zIndex = "0";
-    // }
     for (const pair of nodes) {
         const node = pair[1];
         const nodePos: Vec2 = { x: node.position.x + camera.x, y: node.position.y + camera.y };
@@ -157,7 +156,31 @@ document.onmousedown = e => {
             trackedId = node.id;
         }
     }
+
+    if (linkModeButton.checked && trackedId !== undefined) {
+        if (linkSelectID1 === undefined) {
+            linkSelectID1 = trackedId;
+        } else if (linkSelectID2 === undefined && linkSelectID1 !== trackedId) {
+            linkSelectID2 = trackedId;
+
+            let newEdge = [linkSelectID1, linkSelectID2];
+            const edgeExistsIndex = edges.findIndex(edge => Compare(edge, newEdge));
+
+            if (edgeExistsIndex !== -1) {
+                edges.splice(edgeExistsIndex, 1);
+            }
+            else edges.push([linkSelectID1, linkSelectID2]);
+
+            linkSelectID1 = undefined;
+            linkSelectID2 = undefined;
+            DrawGraph();
+        }
+    }
 };
+
+function Compare(a: number[], b: number[]) {
+    return (a[0] === b[0] && a[1] === b[1]) || (a[0] === b[1] && a[1] === b[0]);
+}
 
 document.onmouseup = () => {
     drag = false;
@@ -200,7 +223,6 @@ document.onmousemove = e => {
         duration: 100,
         fill: "forwards"
     };
-    //trackedNode.animate(keyframes, options);
     // biome-ignore lint/suspicious/noExplicitAny: <explanation>
         for (const nodeDiv of nodeDivs as any) {
         const nodeId = +(nodeDiv.dataset.id as string);
