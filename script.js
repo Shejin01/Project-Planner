@@ -1,5 +1,6 @@
 "use strict";
 const nameInput = document.getElementById('name-input');
+const colorInput = document.getElementById('color-input');
 const graphDiv = document.getElementById('graph');
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
@@ -26,11 +27,19 @@ function CreateNode() {
     let node = {
         title: nameInput.value,
         position: { x: 0, y: 0 },
+        color: colorInput.value,
         id: lastId++
     };
     Create(node);
     drag = true;
     trackedId = node.id;
+}
+function SetProperty() {
+    const selectedNode = nodes.get(selectedId);
+    selectedNode.title = nameInput.value;
+    selectedNode.color = colorInput.value || "#333333";
+    nodeDivs[selectedId].children[1].innerHTML = selectedNode.title;
+    nodeDivs[selectedId].style.borderBottomColor = selectedNode.color;
 }
 function Create(node) {
     if (node.title === '')
@@ -46,9 +55,10 @@ function DrawNode(node) {
     nodeDiv.classList.add('node');
     nodeDiv.style.left = `${node.position.x}px`;
     nodeDiv.style.top = `${node.position.y}px`;
+    nodeDiv.style.borderBottomColor = node.color || "#333333";
     nodeDiv.dataset.id = (_a = node.id) === null || _a === void 0 ? void 0 : _a.toString();
     nodeDiv.innerHTML = `
-		<img src="close.svg" onclick="RemoveNode(this)">
+		<img src="icons/close.svg" onclick="RemoveNode(this)">
 		<p>${node.title}</p>
 	`;
     graphDiv.append(nodeDiv);
@@ -171,6 +181,8 @@ window.onload = Load;
 window.onbeforeunload = Save;
 window.onresize = DrawGraph;
 let trackedId = undefined;
+let selectedId = undefined;
+let selected = false;
 let prevMousePos = { x: 0, y: 0 };
 document.onmousedown = e => {
     drag = true;
@@ -183,12 +195,15 @@ document.onmousedown = e => {
         const node = pair[1];
         const nodePos = { x: node.position.x + camera.x, y: node.position.y + camera.y };
         if (mousePos.x < nodePos.x || mousePos.x > nodePos.x + nodeSize.x ||
-            mousePos.y < nodePos.y || mousePos.y > nodePos.y + nodeSize.y)
+            mousePos.y < nodePos.y || mousePos.y > nodePos.y + nodeSize.y) {
             continue;
+        }
         const distance = (nodePos.x - mousePos.x) ** 2 + (nodePos.y - mousePos.y) ** 2;
         if (distance < closestDistance) {
             closestDistance = distance;
             trackedId = node.id;
+            selected = true;
+            selectedId = node.id;
         }
     }
     if (linkModeButton.checked && trackedId !== undefined) {
@@ -211,6 +226,12 @@ document.onmousedown = e => {
             DrawGraph();
         }
     }
+    if (selected) {
+        const trackedNode = nodes.get(selectedId);
+        nameInput.value = (trackedNode === null || trackedNode === void 0 ? void 0 : trackedNode.title) || '';
+        colorInput.value = (trackedNode === null || trackedNode === void 0 ? void 0 : trackedNode.color) || '#333333';
+    }
+    selected = false;
 };
 function Compare(a, b) {
     return (a[0] === b[0] && a[1] === b[1]) || (a[0] === b[1] && a[1] === b[0]);
@@ -265,5 +286,9 @@ function DebugCreate() {
     Create({ title: "Project 4", position: { x: 200, y: 400 }, id: lastId++ });
     Create({ title: "Project 5", position: { x: 350, y: 250 }, id: lastId++ });
     edges = [[0, 1], [1, 2], [2, 3], [3, 4], [4, 0], [2, 4]];
+    DrawGraph();
+}
+function DebugColor() {
+    Create({ title: "Project 5", position: { x: 350, y: 250 }, color: "#DE1A1A", id: lastId++ });
     DrawGraph();
 }

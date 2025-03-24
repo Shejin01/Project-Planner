@@ -14,17 +14,25 @@
 	<div id="menu">
 		<p id="title">Project Planner</p>
 		<input type="text" id="name-input" placeholder="Name">
+		<input type="text" id="color-input" placeholder="Color (HEX)">
 		<button onclick="CreateNode()">Create Node</button>
+		<button onclick="SetProperty()">Set Property</button>
 		<br>
-		<input type="checkbox" checked="true" id="toggle-grid" onclick="ToggleGrid()" name="toggle-grid">
-		<label for="toggle-grid">Toggle Grid</label>
+
+		<img id="img-button" src="icons/save.svg" title="Save Graph" onclick="Save()">
+		<img id="img-button" src="icons/load.svg" title="Load Graph" onclick="Load()">
+		<input type="checkbox" id="toggle-grid" checked="checked" onclick="ToggleGrid()">
+		<label for="toggle-grid" id="label">
+			<img src="icons/grid.svg" title="Toggle Grid">
+		</label>
+		<input type="checkbox" id="link-mode">
+		<label for="link-mode" id="label">
+			<img src="icons/link.svg" title="Link Mode">
+		</label>
 		<br>
-		<input type="checkbox" id="link-mode" name="link-mode">
-		<label for="link-mode">Link Mode</label>
-		<br>
+
 		<button onclick="ResetCamera()">Reset Camera</button>
-		<button onclick="Save()">Save Graph</button>
-		<button onclick="Load()">Load Graph</button>
+
 		<p id="credit"> 
 			Made by <a href="https://github.com/Shejin01">Shejin</a>
 		</p>
