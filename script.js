@@ -1,6 +1,7 @@
 "use strict";
 const nameInput = document.getElementById('name-input');
 const colorInput = document.getElementById('color-input');
+const statusInput = document.getElementById('status-input');
 const graphDiv = document.getElementById('graph');
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
@@ -27,6 +28,7 @@ function CreateNode() {
     let node = {
         title: nameInput.value,
         position: { x: 0, y: 0 },
+        status: statusInput.value,
         color: colorInput.value,
         id: lastId++
     };
@@ -37,8 +39,10 @@ function CreateNode() {
 function SetProperty() {
     const selectedNode = nodes.get(selectedId);
     selectedNode.title = nameInput.value;
+    selectedNode.status = statusInput.value || '';
     selectedNode.color = colorInput.value || "#333333";
     nodeDivs[selectedId].children[1].innerHTML = selectedNode.title;
+    nodeDivs[selectedId].children[2].innerHTML = (selectedNode.status === '') ? '' : `(${selectedNode.status})`;
     nodeDivs[selectedId].style.borderBottomColor = selectedNode.color;
 }
 function Create(node) {
@@ -57,9 +61,11 @@ function DrawNode(node) {
     nodeDiv.style.top = `${node.position.y}px`;
     nodeDiv.style.borderBottomColor = node.color || "#333333";
     nodeDiv.dataset.id = (_a = node.id) === null || _a === void 0 ? void 0 : _a.toString();
+    const status = (node.status === '') ? '' : `(${node.status})`;
     nodeDiv.innerHTML = `
 		<img src="icons/close.svg" onclick="RemoveNode(this)">
-		<p>${node.title}</p>
+		<p class="title">${node.title}</p>
+        <p class="status">${status}</p>
 	`;
     graphDiv.append(nodeDiv);
 }
@@ -198,7 +204,7 @@ document.onmousedown = e => {
             mousePos.y < nodePos.y || mousePos.y > nodePos.y + nodeSize.y) {
             continue;
         }
-        const distance = (nodePos.x - mousePos.x) ** 2 + (nodePos.y - mousePos.y) ** 2;
+        const distance = Math.pow((nodePos.x - mousePos.x), 2) + Math.pow((nodePos.y - mousePos.y), 2);
         if (distance < closestDistance) {
             closestDistance = distance;
             trackedId = node.id;
@@ -230,6 +236,7 @@ document.onmousedown = e => {
         const trackedNode = nodes.get(selectedId);
         nameInput.value = (trackedNode === null || trackedNode === void 0 ? void 0 : trackedNode.title) || '';
         colorInput.value = (trackedNode === null || trackedNode === void 0 ? void 0 : trackedNode.color) || '#333333';
+        statusInput.value = (trackedNode === null || trackedNode === void 0 ? void 0 : trackedNode.status) || '';
     }
     selected = false;
 };

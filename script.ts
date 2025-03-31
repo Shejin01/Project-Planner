@@ -1,5 +1,6 @@
 const nameInput = document.getElementById('name-input') as HTMLInputElement ;
 const colorInput = document.getElementById('color-input') as HTMLInputElement ;
+const statusInput = document.getElementById('status-input') as HTMLInputElement ;
 const graphDiv = document.getElementById('graph') as HTMLDivElement;
 const canvas = document.getElementById("canvas") as HTMLCanvasElement;
 const ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
@@ -18,6 +19,7 @@ interface GraphNode {
     title: string,
     position: Vec2,
     description?: string,
+    status?: string,
     color?: string,
     id?: number
 }
@@ -42,6 +44,7 @@ function CreateNode() {
     let node : GraphNode = {
         title: nameInput.value,
         position: { x: 0, y: 0 },
+        status: statusInput.value,
         color: colorInput.value,
         id: lastId++
     };
@@ -53,8 +56,10 @@ function CreateNode() {
 function SetProperty() {
     const selectedNode = nodes.get(selectedId as number) as GraphNode;
     selectedNode.title = nameInput.value as string;
+    selectedNode.status = statusInput.value || '';
     selectedNode.color = colorInput.value || "#333333";
     nodeDivs[selectedId as number].children[1].innerHTML = selectedNode.title;
+    nodeDivs[selectedId as number].children[2].innerHTML = (selectedNode.status === '') ? '' : `(${selectedNode.status})`;
     nodeDivs[selectedId as number].style.borderBottomColor = selectedNode.color;
 }
 
@@ -72,9 +77,11 @@ function DrawNode(node: GraphNode) {
     nodeDiv.style.top = `${node.position.y}px`;
     nodeDiv.style.borderBottomColor = node.color || "#333333";
     nodeDiv.dataset.id = node.id?.toString();
+    const status = (node.status === '') ? '' : `(${node.status})`;
     nodeDiv.innerHTML = `
 		<img src="icons/close.svg" onclick="RemoveNode(this)">
-		<p>${node.title}</p>
+		<p class="title">${node.title}</p>
+        <p class="status">${status}</p>
 	`;
     graphDiv.append(nodeDiv);
 }
@@ -270,6 +277,7 @@ document.onmousedown = e => {
         const trackedNode = nodes.get(selectedId as number);
         nameInput.value = trackedNode?.title || '';
         colorInput.value = trackedNode?.color || '#333333';
+        statusInput.value = trackedNode?.status || '';
     }
     selected = false;
 };
