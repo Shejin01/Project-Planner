@@ -59,7 +59,7 @@ function SetProperty() {
     selectedNode.status = statusInput.value || '';
     selectedNode.color = colorInput.value || "#333333";
     nodeDivs[selectedId as number].children[1].innerHTML = selectedNode.title;
-    nodeDivs[selectedId as number].children[2].innerHTML = (selectedNode.status === '') ? '' : `(${selectedNode.status})`;
+    nodeDivs[selectedId as number].children[2].innerHTML = (selectedNode.status === undefined) ? '' : `(${selectedNode.status})`;
     nodeDivs[selectedId as number].style.borderBottomColor = selectedNode.color;
 }
 
@@ -77,7 +77,7 @@ function DrawNode(node: GraphNode) {
     nodeDiv.style.top = `${node.position.y}px`;
     nodeDiv.style.borderBottomColor = node.color || "#333333";
     nodeDiv.dataset.id = node.id?.toString();
-    const status = (node.status === '') ? '' : `(${node.status})`;
+    const status = (node.status === undefined) ? '' : `(${node.status})`;
     nodeDiv.innerHTML = `
 		<img src="icons/close.svg" onclick="RemoveNode(this)">
 		<p class="title">${node.title}</p>
